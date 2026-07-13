@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>向阳口腔病例管理系统</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ==================== 登录页面 ==================== -->
+<div id="loginPage" class="page active">
+  <div class="login-container">
+    <div class="login-header">
+      <div class="login-logo">&#128177;</div>
+      <h1>向阳口腔病例管理系统</h1>
+      <p>专业口腔病例登记与管理平台</p>
+    </div>
+    <form id="loginForm" class="login-form">
+      <div class="form-group">
+        <label>手机号</label>
+        <input type="text" id="loginPhone" placeholder="请输入手机号" required>
+      </div>
+      <div class="form-group">
+        <label>密码</label>
+        <input type="password" id="loginPassword" placeholder="请输入密码" required>
+      </div>
+      <div class="login-error" id="loginError"></div>
+      <button type="submit" class="btn btn-primary btn-block">登 录</button>
+    </form>
+    <div class="login-footer">
+      <span>安全加密传输 | 数据存储在您的GitHub仓库</span>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 主应用 ==================== -->
+<div id="appPage" class="page">
+  <!-- 侧边栏 -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">&#128177;</div>
+      <div class="sidebar-title">
+        <h3>向阳口腔</h3>
+        <span>病例管理系统 v1.0</span>
+      </div>
+    </div>
+    
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item active" data-page="dashboard">
+        <span class="nav-icon">&#128202;</span> 工作台
+      </a>
+      <a href="#" class="nav-item" data-page="patients">
+        <span class="nav-icon">&#128101;</span> 患者列表
+      </a>
+      <a href="#" class="nav-item" data-page="newRecord">
+        <span class="nav-icon">&#10133;</span> 新增病例
+      </a>
+      <a href="#" class="nav-item" data-page="aiExam">
+        <span class="nav-icon">&#129302;</span> AI口腔检查
+      </a>
+      <a href="#" class="nav-item" data-page="consentForms">
+        <span class="nav-icon">&#128221;</span> 知情同意书
+      </a>
+      <a href="#" class="nav-item" data-page="settings">
+        <span class="nav-icon">&#9881;</span> 设置
+      </a>
+    </nav>
+    
+    <div class="sidebar-footer">
+      <div class="sync-status" id="syncStatus">
+        <span class="sync-dot"></span>
+        <span class="sync-text">数据已同步</span>
+      </div>
+      <div class="sidebar-user">
+        <div class="user-avatar">郑</div>
+        <div class="user-info">
+          <strong>郑博医生</strong>
+          <span>口腔全科</span>
+        </div>
+        <button class="btn-logout" id="btnLogout" title="退出登录">&#10149;</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 移动端菜单按钮 -->
+  <button class="mobile-menu-btn" id="mobileMenuBtn">&#9776;</button>
+
+  <!-- 主内容区 -->
+  <main class="main-content">
+    
+    <!-- 工作台页面 -->
+    <div id="dashboardPage" class="content-page active">
+      <div class="page-header">
+        <h2>&#128202; 工作台</h2>
+        <span class="current-time" id="currentTime"></span>
+      </div>
+      
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon blue">&#128101;</div>
+          <div class="stat-info">
+            <span class="stat-value" id="statTotalPatients">0</span>
+            <span class="stat-label">总患者数</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">&#128221;</div>
+          <div class="stat-info">
+            <span class="stat-value" id="statTotalRecords">0</span>
+            <span class="stat-label">总病例数</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon orange">&#128197;</div>
+          <div class="stat-info">
+            <span class="stat-value" id="statTodayRecords">0</span>
+            <span class="stat-label">今日新增</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon purple">&#128203;</div>
+          <div class="stat-info">
+            <span class="stat-value" id="statConsentForms">0</span>
+            <span class="stat-label">知情同意书</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="card">
+          <div class="card-header">
+            <h3>最近病例</h3>
+            <a href="#" class="link" data-page="patients">查看全部</a>
+          </div>
+          <div class="card-body" id="recentRecords">
+            <div class="empty-state">暂无病例记录</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h3>快速操作</h3>
+          </div>
+          <div class="card-body quick-actions">
+            <button class="quick-btn" data-page="newRecord">
+              <span class="quick-icon">&#10133;</span>
+              <span>新增病例</span>
+            </button>
+            <button class="quick-btn" onclick="app.exportAllData()">
+              <span class="quick-icon">&#128229;</span>
+              <span>导出数据</span>
+            </button>
+            <button class="quick-btn" onclick="app.syncToGitHub()">
+              <span class="quick-icon">&#128259;</span>
+              <span>同步到GitHub</span>
+            </button>
+            <button class="quick-btn" onclick="app.showImportDialog()">
+              <span class="quick-icon">&#128228;</span>
+              <span>导入数据</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 患者列表页面 -->
+    <div id="patientsPage" class="content-page">
+      <div class="page-header">
+        <h2>&#128101; 患者列表</h2>
+        <div class="header-actions">
+          <input type="text" class="search-input" id="patientSearch" placeholder="搜索患者姓名/电话...">
+          <button class="btn btn-primary" data-page="newRecord">+ 新增病例</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>患者姓名</th>
+                <th>性别</th>
+                <th>年龄</th>
+                <th>电话</th>
+                <th>最近就诊</th>
+                <th>病例数</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="patientTableBody">
+              <tr><td colspan="7" class="empty-cell">暂无患者数据</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 新增病例页面 -->
+    <div id="newRecordPage" class="content-page">
+      <div class="page-header">
+        <h2>&#10133; 新增病例</h2>
+        <button class="btn btn-outline" id="btnCancelRecord">取消</button>
+      </div>
+      
+      <form id="recordForm" class="record-form">
+        <!-- 患者信息 -->
+        <div class="card">
+          <div class="card-header"><h3>患者信息</h3></div>
+          <div class="card-body form-grid">
+            <div class="form-group">
+              <label>患者姓名 <span class="required">*</span></label>
+              <input type="text" id="patientName" required placeholder="请输入患者姓名">
+            </div>
+            <div class="form-group">
+              <label>性别 <span class="required">*</span></label>
+              <select id="patientGender" required>
+                <option value="">请选择</option>
+                <option value="男">男</option>
+                <option value="女">女</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>年龄</label>
+              <input type="number" id="patientAge" min="1" max="150" placeholder="年龄">
+            </div>
+            <div class="form-group">
+              <label>联系电话</label>
+              <input type="tel" id="patientPhone" placeholder="手机号">
+            </div>
+            <div class="form-group">
+              <label>身份证号</label>
+              <input type="text" id="patientIdCard" placeholder="选填">
+            </div>
+            <div class="form-group">
+              <label>地址</label>
+              <input type="text" id="patientAddress" placeholder="选填">
+            </div>
+          </div>
+        </div>
+
+        <!-- 牙位选择 -->
+        <div class="card">
+          <div class="card-header">
+            <h3>牙位选择</h3>
+            <div class="tooth-toggle">
+              <button class="tooth-type-btn active" id="btnPermanent" type="button">恒牙 (1-8)</button>
+              <button class="tooth-type-btn" id="btnPrimary" type="button">乳牙 (I-V)</button>
+            </div>
+            <span class="selected-teeth" id="selectedTeethDisplay">未选择牙位</span>
+          </div>
+          <div class="card-body">
+            <div class="tooth-chart-container">
+              <div class="condition-toolbar" id="conditionToolbar">
+                <span style="font-size:12px;color:var(--gray-500);padding:3px 0;">选中牙位后标记：</span>
+                <button class="cond-btn caries-cond" data-cond="caries" type="button">&#9679; 龋病</button>
+                <button class="cond-btn loose-cond" data-cond="loose" type="button">&#8661; 松动</button>
+                <button class="cond-btn missing-cond" data-cond="missing" type="button">&#10007; 缺失</button>
+                <button class="cond-btn" data-cond="custom" type="button">&#9733; 自定义</button>
+              </div>
+              <div class="tooth-quad-grid" id="toothChart"></div>
+              <div class="tooth-legend">
+                <span class="legend-item"><span class="legend-dot selected"></span> 已选</span>
+                <span class="legend-item"><span class="legend-dot caries"></span> 龋病</span>
+                <span class="legend-item"><span class="legend-dot loose"></span> 松动</span>
+                <span class="legend-item"><span class="legend-dot missing"></span> 缺失</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 症状与诊断 -->
+        <div class="card">
+          <div class="card-header"><h3>症状与诊断</h3></div>
+          <div class="card-body">
+            <div class="form-group">
+              <label>主诉 <span class="required">*</span></label>
+              <textarea id="chiefComplaint" rows="2" required placeholder="患者主要诉求..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>现病史</label>
+              <textarea id="presentIllness" rows="3" placeholder="发病时间、过程、既往治疗..."></textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label>诊断结果 <span class="required">*</span></label>
+                <input type="text" id="diagnosis" required placeholder="例如：慢性牙髓炎">
+              </div>
+              <div class="form-group flex-1">
+                <label>治疗类型（可多选）</label>
+                <div class="checkbox-group" id="treatmentTypeGroup">
+                  <label class="cb-label"><input type="checkbox" name="treatmentType" value="补牙"> 补牙</label>
+                  <label class="cb-label"><input type="checkbox" name="treatmentType" value="根管治疗"> 根管治疗</label>
+                  <label class="cb-label"><input type="checkbox" name="treatmentType" value="拔牙"> 拔牙</label>
+                  <label class="cb-label"><input type="checkbox" name="treatmentType" value="种植牙"> 种植牙</label>
+                  <label class="cb-label"><input type="checkbox" name="treatmentType" value="正畸"> 正畸</label>
+                  <label class="cb-label"><input type="checkbox" name="treatmentType" value="牙周治疗"> 牙周治疗</label>
+                  <label class="cb-label"><input type="checkbox" name="treatmentType" value="修复"> 修复</label>
+                  <label class="cb-label"><input type="checkbox" name="treatmentType" value="洁牙"> 洁牙</label>
+                  <label class="cb-label"><input type="checkbox" name="treatmentType" value="口腔检查"> 口腔检查</label>
+                  <label class="cb-label"><input type="checkbox" name="treatmentType" value="儿童牙科"> 儿童牙科</label>
+                  <label class="cb-label"><input type="checkbox" name="treatmentType" value="其他"> 其他</label>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>口腔检查</label>
+              <textarea id="oralExam" rows="3" placeholder="口腔检查结果，如：牙周探诊深度、松动度、叩痛、冷热诊、影像学检查等..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>治疗方案</label>
+              <textarea id="treatmentPlan" rows="3" placeholder="详细的治疗计划和步骤..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>医嘱</label>
+              <textarea id="doctorAdvice" rows="2" placeholder="术后注意事项和建议..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>备注</label>
+              <textarea id="recordNotes" rows="2" placeholder="其他需要记录的信息..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- 知情同意书 -->
+        <div class="card">
+          <div class="card-header"><h3>知情同意书</h3></div>
+          <div class="card-body">
+            <div class="form-group">
+              <label>选择知情同意书模板</label>
+              <select id="consentFormSelect">
+                <option value="">暂不需要</option>
+              </select>
+            </div>
+            <div class="consent-preview" id="consentPreview" style="display:none;">
+              <div class="consent-preview-content" id="consentPreviewContent"></div>
+              <label class="checkbox-label">
+                <input type="checkbox" id="consentAgreed">
+                <span>患者已阅读并签署知情同意书（电子签）</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline" id="btnResetForm">重置表单</button>
+          <button type="submit" class="btn btn-primary btn-lg">保存病例</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- AI口腔检查页面 -->
+    <div id="aiExamPage" class="content-page">
+      <div class="page-header">
+        <h2>&#129302; AI口腔检查</h2>
+        <span class="page-desc">上传口内照片，AI自动生成口腔检查报告</span>
+      </div>
+
+      <!-- API配置提示 (未配置时显示) -->
+      <div class="card api-config-card" id="aiApiConfigCard" style="display:none;">
+        <div class="card-header"><h3>AI 服务配置</h3></div>
+        <div class="card-body">
+          <p class="settings-desc">使用 Gemini Vision API 分析口腔图像。请在下方配置您的 API Key（<a href="https://aistudio.google.com/apikey" target="_blank" class="link">获取Gemini API Key</a>）。</p>
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label>API Key</label>
+              <input type="password" id="aiApiKey" placeholder="输入Gemini API Key">
+            </div>
+            <div class="form-group" style="width:200px;">
+              <label>模型</label>
+              <select id="aiModel">
+                <option value="gemini-2.5-flash">Gemini 2.5 Flash (推荐)</option>
+                <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn btn-primary" id="btnSaveAiConfig">保存配置</button>
+          <span style="margin-left:12px;font-size:12px;color:var(--gray-500);">API Key 仅存储在您的浏览器本地</span>
+        </div>
+      </div>
+
+      <div class="ai-exam-layout">
+        <!-- 左侧：图片上传 -->
+        <div class="card">
+          <div class="card-header"><h3>&#128247; 上传口内照片</h3></div>
+          <div class="card-body">
+            <div class="upload-zone" id="aiUploadZone">
+              <div class="upload-zone-content" id="aiUploadPrompt">
+                <div class="upload-icon">&#128247;</div>
+                <p class="upload-title">点击上传或拖拽图片到此处</p>
+                <p class="upload-hint">支持 JPG / PNG / WebP，建议清晰拍摄口内情况</p>
+                <button class="btn btn-outline btn-sm" id="btnOpenCamera" type="button">&#128247; 拍照</button>
+              </div>
+              <div class="upload-preview" id="aiImagePreview" style="display:none;">
+                <img id="aiPreviewImg" src="" alt="口腔照片预览">
+                <button class="btn-remove-image" id="btnRemoveImage" title="移除图片">&times;</button>
+              </div>
+              <input type="file" id="aiImageInput" accept="image/*" capture="environment" style="display:none;">
+              <input type="file" id="aiCameraInput" accept="image/*" capture="environment" style="display:none;">
+            </div>
+            <div class="upload-actions" id="aiUploadActions" style="display:none;">
+              <button class="btn btn-primary btn-block" id="btnAnalyzeImage">
+                &#128269; 开始AI分析
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右侧：分析结果 -->
+        <div class="card">
+          <div class="card-header"><h3>&#129514; 分析结果</h3></div>
+          <div class="card-body">
+            <div id="aiResultEmpty" class="empty-state">
+              <div style="font-size:48px;margin-bottom:12px;">&#129302;</div>
+              <p>上传口内照片后点击"开始AI分析"</p>
+              <p style="font-size:12px;color:var(--gray-400);">AI将自动识别龋齿、牙结石、牙龈炎症、缺失牙等常见口腔问题</p>
+            </div>
+            <div id="aiResultLoading" class="ai-loading" style="display:none;">
+              <div class="ai-loading-spinner"></div>
+              <p>AI正在分析口腔图像，请稍候...</p>
+              <p style="font-size:12px;color:var(--gray-400);">通常需要 5-15 秒</p>
+            </div>
+            <div id="aiResultContent" style="display:none;">
+              <div class="ai-result-raw" id="aiResultRaw"></div>
+              <div class="ai-result-structured" id="aiResultStructured"></div>
+              <div class="ai-result-actions">
+                <button class="btn btn-primary" id="btnFillToRecord">&#128221; 填入新增病例</button>
+                <button class="btn btn-outline" id="btnCopyResult">&#128203; 复制结果</button>
+                <button class="btn btn-outline" id="btnReanalyze">&#128260; 重新分析</button>
+              </div>
+            </div>
+            <div id="aiResultError" class="ai-error" style="display:none;">
+              <div style="font-size:36px;margin-bottom:8px;">&#9888;&#65039;</div>
+              <p id="aiErrorMsg">分析失败</p>
+              <button class="btn btn-outline btn-sm" id="btnRetryAnalysis">重试</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 分析历史 -->
+      <div class="card" id="aiHistoryCard" style="display:none;">
+        <div class="card-header">
+          <h3>&#128337; 检查历史</h3>
+          <button class="btn btn-outline btn-sm" id="btnClearAiHistory">清空记录</button>
+        </div>
+        <div class="card-body" id="aiHistoryList"></div>
+      </div>
+    </div>
+
+    <!-- 知情同意书管理页面 -->
+    <div id="consentFormsPage" class="content-page">
+      <div class="page-header">
+        <h2>&#128221; 知情同意书模板</h2>
+      </div>
+      <div class="consent-templates-grid" id="consentTemplatesGrid"></div>
+    </div>
+
+    <!-- 设置页面 -->
+    <div id="settingsPage" class="content-page">
+      <div class="page-header">
+        <h2>&#9881;&#65039; 设置</h2>
+      </div>
+      
+      <div class="card">
+        <div class="card-header"><h3>GitHub 数据同步配置</h3></div>
+        <div class="card-body">
+          <p class="settings-desc">配置GitHub仓库用于云端存储病例数据，实现多设备数据同步。请先在GitHub创建一个私有仓库并生成Personal Access Token。</p>
+          <p class="settings-desc" style="color:var(--primary);background:rgba(37,99,235,.06);padding:10px 12px;border-radius:8px;margin-top:8px;">💡 <b>本地运行：</b>通过「启动服务器.bat」启动时，项目根目录的 <code>github数据库私钥.txt</code> 会自动填入下方 Token，无需手动粘贴（注意：直接双击 index.html 的 file:// 协议会被浏览器拦截 GitHub 请求）。<br>🌐 <b>公网部署：</b>服务端不含私钥文件，<b>必须在此处手动填写 Token</b> 才能同步数据，请勿把私钥文件上传到公开托管。填写后点「保存配置」即可。</p>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>GitHub 用户名</label>
+              <input type="text" id="githubUsername" placeholder="your-username">
+            </div>
+            <div class="form-group">
+              <label>仓库名称</label>
+              <input type="text" id="githubRepo" placeholder="dental-records-data">
+            </div>
+            <div class="form-group">
+              <label>Personal Access Token</label>
+              <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxx">
+              <small class="form-hint">Token需要 repo 权限。数据存储在您的私有仓库中，完全由您掌控。</small>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-outline" onclick="app.testGitHubConnection()">测试连接</button>
+            <button class="btn btn-primary" onclick="app.saveGitHubConfig()">保存配置</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>数据管理</h3></div>
+        <div class="card-body">
+          <div class="data-actions">
+            <div class="data-action-item">
+              <div>
+                <strong>导出所有数据</strong>
+                <p>将所有病例数据导出为JSON文件，用于备份或迁移</p>
+              </div>
+              <button class="btn btn-outline" onclick="app.exportAllData()">导出JSON</button>
+            </div>
+            <div class="data-action-item">
+              <div>
+                <strong>导入数据</strong>
+                <p>从之前导出的JSON文件恢复数据</p>
+              </div>
+              <button class="btn btn-outline" onclick="app.showImportDialog()">导入</button>
+            </div>
+            <div class="data-action-item">
+              <div>
+                <strong>同步到GitHub</strong>
+                <p>将当前数据上传到GitHub仓库</p>
+              </div>
+              <button class="btn btn-outline" onclick="app.syncToGitHub()">立即同步</button>
+            </div>
+            <div class="data-action-item">
+              <div>
+                <strong>从GitHub拉取</strong>
+                <p>从GitHub仓库下载最新数据</p>
+              </div>
+              <button class="btn btn-outline" onclick="app.pullFromGitHub()">拉取数据</button>
+            </div>
+            <div class="data-action-item danger">
+              <div>
+                <strong>清除本地数据</strong>
+                <p>清除浏览器中存储的所有本地数据（请先导出备份）</p>
+              </div>
+              <button class="btn btn-danger" onclick="app.clearLocalData()">清除数据</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ==================== 查看病例弹窗 ==================== -->
+<div class="modal-overlay" id="recordDetailModal">
+  <div class="modal large">
+    <div class="modal-header">
+      <h3>&#128196; 病例详情</h3>
+      <button class="modal-close" onclick="app.closeModal('recordDetailModal')">&times;</button>
+    </div>
+    <div class="modal-body" id="recordDetailContent"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="app.exportRecordPDF()">导出PDF</button>
+      <button class="btn btn-outline" onclick="app.printRecord()">打印病例</button>
+      <button class="btn btn-danger" onclick="app.deleteRecord()">删除病例</button>
+      <button class="btn btn-primary" onclick="app.closeModal('recordDetailModal')">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 复诊记录弹窗 ==================== -->
+<div class="modal-overlay" id="followUpModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>&#128197; <span id="followUpModalTitle">添加复诊</span></h3>
+      <button class="modal-close" onclick="app.closeModal('followUpModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="fuRecordId">
+      <input type="hidden" id="fuId">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>复诊日期 <span class="required">*</span></label>
+          <input type="date" id="fuDate" required>
+        </div>
+        <div class="form-group">
+          <label>操作类型</label>
+          <input type="text" id="fuOperation" placeholder="如：换药、拆线、根管封药...">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>主诉</label>
+        <textarea id="fuChiefComplaint" rows="2" placeholder="患者本次复诊主要诉求..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>诊断</label>
+        <input type="text" id="fuDiagnosis" placeholder="复诊诊断结果">
+      </div>
+      <div class="form-group">
+        <label>口腔检查</label>
+        <textarea id="fuOralExam" rows="2" placeholder="本次复诊口腔检查所见..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>医嘱</label>
+        <textarea id="fuDoctorAdvice" rows="2" placeholder="术后注意事项和建议..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>备注</label>
+        <textarea id="fuNotes" rows="1" placeholder="其他需要记录的信息..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="app.closeModal('followUpModal')">取消</button>
+      <button class="btn btn-primary" id="btnSaveFollowUp">保存复诊</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 导入弹窗 ==================== -->
+<div class="modal-overlay" id="importModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>&#128228; 导入数据</h3>
+      <button class="modal-close" onclick="app.closeModal('importModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p>选择之前导出的JSON文件进行数据导入。导入将合并到现有数据中。</p>
+      <div class="import-zone" id="importZone">
+        <p>&#128229;</p>
+        <p>拖拽JSON文件到此处或点击选择</p>
+        <input type="file" id="importFileInput" accept=".json" style="display:none;">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="app.closeModal('importModal')">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== Toast提示 ==================== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
